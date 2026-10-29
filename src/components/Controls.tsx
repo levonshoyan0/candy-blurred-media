@@ -19,8 +19,8 @@ interface Props {
 
 const LEDE: Record<UserType, Record<Flow, string>> = {
   free: {
-    new: 'Jennifer sends a blurred photo. "Unlock" opens the Premium paywall; after upgrading, the photo is generated and revealed.',
-    legacy: "Free users get no automatic media. Ask Jennifer for a photo and see today's reply.",
+    new: 'Megan sends a blurred photo. "Unlock" opens the Premium paywall; after upgrading, the photo is generated and revealed.',
+    legacy: "Free users get no automatic media. Ask Megan for a photo and see today's reply.",
   },
   premium: {
     new: "Megan's automatic video arrives blurred when the balance can't cover it. \"Unlock\" opens the token packs; after paying, the video is generated and revealed.",
@@ -56,11 +56,11 @@ export function Controls({ user, flow, isPremiumNow, balance, settings, onUser, 
         <div className="seg">
           <button className={user === 'free' ? 'on' : ''} onClick={() => onUser('free')}>
             Free user
-            <small>Chat with Jennifer</small>
+            <small>No tokens</small>
           </button>
           <button className={user === 'premium' ? 'on' : ''} onClick={() => onUser('premium')}>
             Premium user
-            <small>Chat with Megan</small>
+            <small>Low balance</small>
           </button>
         </div>
       </div>

@@ -4,13 +4,17 @@ export interface Character {
   name: string;
   avatar: string;
   level: string;
-  /** what the revealed media looks like */
+  /** shown on the Premium paywall */
+  paywall: string;
+  /** what the revealed media looks like (AI-generated stand-ins) */
   photo: string;
   video: string;
 }
 
-/** Free users chat with Jennifer, Premium users with Megan (as in the reference screenshots). */
+const MEGAN = { name: 'Megan', avatar: './megan.png', paywall: './meg-paywall.jpg', video: './meg-video.jpg' };
+
+/** Both users chat with Megan; only their access differs. */
 export const CHARACTERS: Record<UserType, Character> = {
-  free: { name: 'Jennifer', avatar: './jen-av.jpg', level: 'Stranger', photo: './jen-photo.jpg', video: './jen-photo.jpg' },
-  premium: { name: 'Megan', avatar: './megan.png', level: 'Match', photo: './megan.png', video: './meg-video.jpg' },
+  free: { ...MEGAN, level: 'Stranger', photo: './meg-photo.jpg' },
+  premium: { ...MEGAN, level: 'Match', photo: './meg-selfie.jpg' },
 };

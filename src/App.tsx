@@ -29,7 +29,7 @@ const HISTORY: Record<UserType, Message[]> = {
 /** The one message the reviewer sends, and the character's reply, per user and flow. */
 const SCRIPT: Record<UserType, Record<Flow, { ask: string; reply: string[] }>> = {
   free: {
-    new: { ask: 'what are you up to tonight?', reply: ['just got back from the beach 🌴', 'took something just for you…'] },
+    new: { ask: 'what are you up to tonight?', reply: ['lying in bed, kinda bored…', 'took something just for you 😏'] },
     legacy: { ask: 'Hiii, can you send me a photo?', reply: ['ugh i wish i could!', 'my camera is acting up though', 'so tell me about yourself instead?'] },
   },
   premium: {

@@ -7,22 +7,22 @@ A working prototype of the smallest testable slice of **initiative #1** from my 
 
 **▶ Live demo:** https://levonshoyan0.github.io/candy-blurred-media/
 
-<p align="center"><img src="docs/chat-flow.gif" width="300" alt="Free user: Jennifer sends a blurred photo, Unlock opens the Premium paywall, the photo is generated and revealed after upgrading"></p>
+<p align="center"><img src="docs/chat-flow.gif" width="300" alt="Free user: Megan sends a blurred photo, Unlock opens the Premium paywall, the photo is generated and revealed after upgrading"></p>
 
 ## The problem
 
-Candy.ai already sends automatic media (photo 2 tk, 15s video 18 tk), but only to Premium users whose balance covers it. Free users never get it, and Premium users with too few tokens get nothing. If they ask, the character deflects: "ugh i wish i could! my camera is acting up", or "it's just not an option here". The most engaged moment in the chat ends with no way to pay.
+Candy.ai already sends automatic media (photo 2 tk, 15s video 18 tk), but only to Premium users whose balance covers it. Free users never get it, and Premium users with too few tokens get nothing. If they ask, the character deflects: "ugh i wish i could! my camera is acting up", or "i literally cannot, it's just not an option here". The most engaged moment in the chat ends with no way to pay.
 
 ![Current vs suggested, for a free and a Premium user](docs/current-vs-suggested.png)
 
 ## What the prototype does
 
-Pick the user in the sidebar; the rest of the flow follows from it.
+Pick the user in the sidebar; both chat with Megan, and the rest of the flow follows from the user's access.
 
 | User | What the character sends | "Unlock" opens | After paying |
 |---|---|---|---|
-| **Free** (chat with Jennifer) | One blurred photo per session | The Premium paywall: "Upgrade to Unlock · Photos & videos from Jennifer" | Premium's 100 tokens pay for the photo (98 left) |
-| **Premium** (chat with Megan) | Automatic media, blurred when the balance can't cover it | The "Not Enough Tokens!" pack picker | The pack's tokens pay for the media |
+| **Free** (no tokens) | One blurred photo per session | The Premium paywall: "Upgrade to Unlock · Photos, videos & voice notes from Megan" | Premium's 100 tokens pay for the photo (98 left) |
+| **Premium** (low balance) | Automatic media, blurred when the balance can't cover it | The "Not Enough Tokens!" pack picker | The pack's tokens pay for the media |
 
 In both cases **the photo or video is generated only after payment**. Until then the chat shows a blurred placeholder made from the character's existing art, so unsold media costs nothing and the preview never misrepresents what's coming. Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
 
@@ -41,7 +41,7 @@ The **current** flow reproduces today's behaviour: the user asks for media and t
 | Control | What it does |
 |---|---|
 | **Flow: Suggested / Current** | Switches between blurred media and today's deflection |
-| **User: Free / Premium** | Jennifer (free, no tokens) or Megan (Premium) |
+| **User: Free / Premium** | A free user with no tokens, or a Premium user with a low balance |
 | **User's token balance** | Premium only; editable and applied immediately. Starts at 7 |
 | **What can Megan send you?** | Photos and videos toggles, as in Candy.ai's media settings. Videos are sent first when allowed; nothing allowed means nothing is sent |
 | **Reset demo** | Restarts the chat with the last balance you typed |
@@ -89,7 +89,7 @@ Both suites run in GitHub Actions on every push.
 | Candy.ai's automatic-media prices, pack prices and Premium price | Chat, characters and media (static frames) |
 | The full flow, balance rules and event sequence | Media generation (a short delay) |
 
-Character images are frames from Candy.ai, used only to make the prototype recognisable.
+Character images are AI-generated stand-ins, used only to make the prototype recognisable.
 
 ## Run it
 
@@ -111,7 +111,7 @@ React 18, TypeScript, Vite, Vitest, Playwright. No backend: the slice being test
 ```
 src/
   App.tsx                  flow state, balance rules, analytics events
-  characters.ts            Jennifer (free) and Megan (Premium)
+  characters.ts            Megan, as seen by a free and a Premium user
   lib/media.ts             what gets sent, reveal guard, prices (unit-tested)
   lib/events.ts            analytics events
   components/

@@ -153,7 +153,6 @@ button:disabled { cursor: default; }
 .ic.call { margin-left: auto; }
 .handle-tab { position: relative; align-self: center; width: 70px; height: 13px; margin-top: -1px; border: 1px solid #2c2c2e; border-top: 0; border-radius: 0 0 10px 10px; background: var(--app); z-index: 1; }
 .handle-tab i { position: absolute; left: 50%; top: 5px; translate: -50% 0; width: 32px; height: 3px; border-radius: 2px; background: #48484c; }
-.handle-tab b { position: absolute; right: -14px; top: 2px; width: 8px; height: 8px; border-radius: 50%; background: #ff3b30; }
 .upsell { margin: 10px 12px 0; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 12px; border-radius: 16px; background: linear-gradient(90deg, #2a1a20, #1e1416); border: 1px solid #3a2026; opacity: 1 !important; filter: none !important; }
 .heart { width: 34px; height: 34px; border-radius: 50%; background: #3a2229; color: #f06a85; display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none; }
 .up-t { font-weight: 600; font-size: 14.5px; }
@@ -254,3 +253,15 @@ button:disabled { cursor: default; }
 .tip.below { bottom: auto; top: calc(100% + 10px); animation: bobd 1.6s ease-in-out infinite; }
 .tip.below::after { bottom: auto; top: -6px; border: 6px solid transparent; border-top: 0; border-bottom-color: #fff; }
 @keyframes bobd { 50% { translate: -50% 3px; } }
+
+/* media sized like Candy.ai's chat media (portrait, ~80% of the screen width) */
+.media-wrap { position: relative; align-self: flex-start; width: 80%; max-width: 330px; flex: none; }
+.media { width: 80%; max-width: 330px; height: auto; aspect-ratio: 832 / 1216; flex: none; }
+.media-wrap .media { width: 100%; max-width: none; }
+.media.locked { max-height: 62vh; max-height: 62dvh; }
+.media .play { width: 64px; height: 64px; background: #7a5a4ccc; }
+.media-wrap .tip.below { top: calc(100% + 10px); left: 50%; }
+.pw-t1, .pw-t2 { font-size: 24px; line-height: 1.25; }
+.pw-t1 { margin-top: 18px; }
+.pw-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.media-wrap:has(.tip) { margin-bottom: 46px; }

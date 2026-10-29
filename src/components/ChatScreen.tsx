@@ -51,7 +51,6 @@ export function ChatScreen({ character, showUpgradeBanner, messages, suggestion,
       </header>
       <div className="handle-tab">
         <i />
-        <b />
       </div>
 
       {showUpgradeBanner && (
@@ -133,6 +132,7 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
       </div>
     );
   return (
+    <div className="media-wrap">
     <div className={`media locked ${m.media} ${m.state}`}>
       {/* Placeholder: a generic blur of the character's existing art, not a preview of the new media. */}
       <img src={character.avatar} alt="" className="blurimg" />
@@ -150,11 +150,12 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
             <span className="lk-label">{label}</span>
             <button className="lk-btn" onClick={onUnlock}>
               Unlock
-              <span className="tip below">Tap to unlock</span>
             </button>
           </>
         )}
       </div>
+    </div>
+      {m.state === 'locked' && <span className="tip below">Tap Unlock to see it</span>}
     </div>
   );
 }

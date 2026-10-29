@@ -6,7 +6,7 @@ import * as I from './Icons';
 export function PaywallModal({ character, onUpgrade, onClose }: { character: Character; onUpgrade: () => void; onClose: () => void }) {
   const perks = [
     `${character.name} sends you photos & videos on her own`,
-    `${PREMIUM.tokens} tokens every month, this photo included`,
+    `${PREMIUM.tokens} tokens every month`,
     'Unlimited text messages',
     'AI Live Phone Call',
     'and more…',
@@ -19,10 +19,10 @@ export function PaywallModal({ character, onUpgrade, onClose }: { character: Cha
         </button>
         <div className="pw-cards">
           <span className="pw-back" />
-          <img src={character.photo} alt="" />
+          <img src={character.paywall} alt="" />
         </div>
         <div className="pw-t1">Upgrade to Unlock</div>
-        <div className="pw-t2">Photos &amp; videos from {character.name}</div>
+        <div className="pw-t2">Photos, videos &amp; voice notes from {character.name}</div>
         <div className="pw-sub">With subscription you get access to:</div>
         <ul className="pw-list">
           {perks.map((p) => (
@@ -33,7 +33,7 @@ export function PaywallModal({ character, onUpgrade, onClose }: { character: Cha
           ))}
         </ul>
         <button className="pw-btn" onClick={onUpgrade}>
-          <span className="gem">◆</span> Upgrade to Premium
+          <I.Diamond /> Upgrade to Premium
         </button>
       </div>
     </div>

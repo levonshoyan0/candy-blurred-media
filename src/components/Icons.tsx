@@ -73,3 +73,10 @@ export const Play = ({ size = 30 }: P) => (
   </svg>
 );
 export const ChevronRight = ({ size = 20 }: P) => svg(size, <path d="m9 6 6 6-6 6" />);
+/** Candy.ai's Premium gem (tilted, faceted), as on its "Upgrade to Premium" button. */
+export const Diamond = ({ size = 26 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ transform: 'rotate(-18deg)' }}>
+    <path d="M6.5 4h11L22 9.2 12 21 2 9.2z" fill="#ffd3de" />
+    <path d="M2 9.2h20M8.6 9.2 12 21l3.4-11.8M6.5 4l2.1 5.2L12 4l3.4 5.2L17.5 4" fill="none" stroke="#e26d8c" strokeWidth={1.1} strokeLinejoin="round" />
+  </svg>
+);

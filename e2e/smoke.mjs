@@ -50,12 +50,12 @@ for (const vp of viewports) {
   console.log(`[${vp.name}]`);
   await page.goto(URL);
 
-  // ---------- Free user (Jennifer) ----------
+  // ---------- Free user (no tokens) ----------
   await step('free: chat renders with the upgrade banner', () => page.locator('.upsell').waitFor({ timeout: 5000 }));
   await step('free: character sends a blurred photo', () => sendAndWait('.media.locked.photo'));
   await step('free: Unlock → Premium paywall about photos & videos', async () => {
     await page.locator('.lk-btn').click();
-    await page.locator('.paywall .pw-t2', { hasText: 'Photos & videos from Jennifer' }).waitFor({ timeout: 3000 });
+    await page.locator('.paywall .pw-t2', { hasText: 'Photos, videos & voice notes from Megan' }).waitFor({ timeout: 3000 });
   });
   await step('free: closing the paywall keeps the photo locked', async () => {
     await page.locator('.pw-x').click();
@@ -86,7 +86,7 @@ for (const vp of viewports) {
     if (await page.locator('.media').count()) throw new Error('media sent');
   });
 
-  // ---------- Premium user (Megan) ----------
+  // ---------- Premium user (low balance) ----------
   await choose('Suggested');
   await choose('Premium user');
   await step('premium: starts with 7 tokens', () => expectBalance(7));
