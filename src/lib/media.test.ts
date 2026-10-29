@@ -1,20 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { canReveal, decideMedia, DEFAULT_PACK, PREMIUM, PRICES, SHEET_PACKS } from './media';
+import { ASKED_PRICES, canReveal, decideMedia, DEFAULT_PACK, PREMIUM, PRICES, SHEET_PACKS } from './media';
 
 const both = { photos: true, videos: true };
+const none = { photos: false, videos: false };
 
-describe('decideMedia', () => {
-  it('free users always get one blurred photo', () => {
-    expect(decideMedia('free', both, 0)).toEqual({ type: 'photo', cost: 2, locked: true });
-    expect(decideMedia('free', { photos: false, videos: false }, 0)?.locked).toBe(true);
+describe('automatic media', () => {
+  it('free users get one blurred video', () => {
+    expect(decideMedia('free', none, 0)).toEqual({ type: 'video', cost: 18, locked: true });
   });
 
   it('premium with videos allowed gets a video; blurred when the balance is short', () => {
     expect(decideMedia('premium', both, 7)).toEqual({ type: 'video', cost: 18, locked: true });
-    expect(decideMedia('premium', both, 17)?.locked).toBe(true);
-  });
-
-  it('premium with enough tokens gets it unlocked, as today', () => {
     expect(decideMedia('premium', both, 18)).toEqual({ type: 'video', cost: 18, locked: false });
   });
 
@@ -25,7 +21,19 @@ describe('decideMedia', () => {
   });
 
   it('nothing allowed → nothing sent', () => {
-    expect(decideMedia('premium', { photos: false, videos: false }, 0)).toBeNull();
+    expect(decideMedia('premium', none, 0)).toBeNull();
+  });
+});
+
+describe('requested media', () => {
+  it('is always sent at the asked-for price, even with nothing allowed', () => {
+    expect(decideMedia('premium', none, 100, 'photo')).toEqual({ type: 'photo', cost: 4, locked: false });
+    expect(decideMedia('premium', none, 100, 'video')).toEqual({ type: 'video', cost: 30, locked: false });
+  });
+
+  it('is blurred for free users and for short balances', () => {
+    expect(decideMedia('free', none, 0, 'photo')?.locked).toBe(true);
+    expect(decideMedia('premium', both, 29, 'video')?.locked).toBe(true);
   });
 });
 
@@ -36,8 +44,8 @@ describe('reveal rules', () => {
   });
 
   it('every pack on the sheet, and Premium, covers any single item', () => {
-    for (const p of SHEET_PACKS) expect(canReveal(p.tokens, PRICES.video)).toBe(true);
-    expect(canReveal(PREMIUM.tokens, PRICES.photo)).toBe(true);
+    for (const p of SHEET_PACKS) expect(canReveal(p.tokens, ASKED_PRICES.video)).toBe(true);
+    expect(canReveal(PREMIUM.tokens, ASKED_PRICES.video)).toBe(true);
   });
 
   it('preselects the middle pack', () => {

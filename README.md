@@ -3,38 +3,38 @@
 [![Deploy](https://github.com/levonshoyan0/candy-blurred-media/actions/workflows/deploy.yml/badge.svg)](https://github.com/levonshoyan0/candy-blurred-media/actions/workflows/deploy.yml)
 [![E2E](https://github.com/levonshoyan0/candy-blurred-media/actions/workflows/smoke.yml/badge.svg)](https://github.com/levonshoyan0/candy-blurred-media/actions/workflows/smoke.yml)
 
-A working prototype of the smallest testable slice of **initiative #1** from my EverAI case study: in an active chat, the character sends a blurred photo or video with an "Unlock" button to users who can't receive media today.
+A working prototype of the smallest testable slice of **initiative #1** from my EverAI case study: in an active chat, users who can't receive media today get a blurred photo or video with an "Unlock" button, whether the character sends it on her own or they ask for it.
 
 **▶ Live demo:** https://levonshoyan0.github.io/candy-blurred-media/
 
-<p align="center"><img src="docs/chat-flow.gif" width="300" alt="Free user: Megan sends a blurred photo, Unlock opens the Premium paywall, the photo is generated and revealed after upgrading"></p>
+<p align="center"><img src="docs/chat-flow.gif" width="300" alt="Free user: Megan sends a blurred video, Unlock opens the Premium paywall, the video is generated and revealed after upgrading"></p>
 
 ## The problem
 
-Candy.ai already sends automatic media (photo 2 tk, 15s video 18 tk), but only to Premium users whose balance covers it. Free users never get it, and Premium users with too few tokens get nothing. If they ask, the character deflects: "ugh i wish i could! my camera is acting up", or "i literally cannot, it's just not an option here". The most engaged moment in the chat ends with no way to pay.
+Candy.ai already sends media (automatic: photo 2 tk, 15s video 18 tk; asked for: photo 4 tk, 15s video 30 tk), but only to Premium users whose balance covers it. Free users never get it, and Premium users with too few tokens get nothing. If they ask, the character deflects: "ugh i wish i could! my camera is acting up", or "i literally cannot, it's just not an option here". The most engaged moment in the chat ends with no way to pay.
 
 ![Current vs suggested, for a free and a Premium user](docs/current-vs-suggested.png)
 
 ## What the prototype does
 
-Pick the user in the sidebar; both chat with Megan, and the rest of the flow follows from the user's access.
+Pick the user in the sidebar; both chat with Megan, and the rest of the flow follows from the user's access. In the chat, tap one of three messages: "send me a photo", "send me a video" or "what are you up to tonight?" (Megan replies and sends media on her own).
 
 | User | What the character sends | "Unlock" opens | After paying |
 |---|---|---|---|
-| **Free** (no tokens) | One blurred photo per session | The Premium paywall: "Upgrade to Unlock · Photos, videos & voice notes from Megan" | Premium's 100 tokens pay for the photo (98 left) |
-| **Premium** (low balance) | Automatic media, blurred when the balance can't cover it | The "Not Enough Tokens!" pack picker | The pack's tokens pay for the media |
+| **Free** (no tokens) | A blurred video on her own (once a session), or the photo/video they ask for | The Premium paywall: "Upgrade to Unlock · Photos, videos & voice notes from Megan" | Premium's 100 tokens pay for it (82 left after the 18-token video) |
+| **Premium** (low balance) | Automatic media, or the photo/video they ask for, blurred when the balance can't cover it | The "Not Enough Tokens!" pack picker | The pack's tokens pay for the media |
 
-In both cases **the photo or video is generated only after payment**. Until then the chat shows a blurred placeholder made from the character's existing art, so unsold media costs nothing and the preview never misrepresents what's coming. Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
+In both cases **the photo or video is generated only after payment**. Until then the chat shows it blurred. Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
 
 **Free user**
 
-![Free user: blurred photo → Premium paywall → generated after payment → revealed](docs/free-flow.png)
+![Free user: blurred video → Premium paywall → generated after payment → revealed](docs/free-flow.png)
 
 **Premium user with 7 tokens**
 
 ![Premium user: blurred video → Not Enough Tokens sheet → revealed](docs/premium-flow.png)
 
-The **current** flow reproduces today's behaviour: the user asks for media and the character deflects.
+The **current** flow reproduces today's behaviour: free users and Premium users without enough tokens who ask for media get a deflection.
 
 ![Desktop view with demo controls](docs/desktop.png)
 
@@ -60,7 +60,7 @@ Other events: `paywall_dismissed`, `packs_dismissed`, `pack_selected`, `checkout
 
 ## Built-in guardrails
 
-- Only media types the user allows are sent, and free users get at most one blurred photo per session.
+- Automatic media follows the user's settings; free users get at most one automatic blurred video per session. Requested media is always answered.
 - Media is generated and revealed in exactly one place, and only when the balance covers its price.
 - If the user tops up elsewhere, "Unlock" reveals the item directly instead of selling again.
 - No timers, countdowns or follow-up messages; closing the paywall or sheet is one tap.
@@ -69,24 +69,26 @@ Other events: `paywall_dismissed`, `packs_dismissed`, `pack_selected`, `checkout
 
 Both suites run in GitHub Actions on every push.
 
-**Unit** (`src/lib/media.test.ts`, Vitest): what gets sent for each user, setting and balance; never revealing when the balance is short; every pack on the sheet covers an item.
+**Unit** (`src/lib/media.test.ts`, Vitest): what gets sent for each user, setting, balance and request, at automatic vs asked-for prices; never revealing when the balance is short; every pack on the sheet covers an item.
 
 **End-to-end** (`e2e/smoke.mjs`, Playwright): runs every flow against the production build on a desktop and a phone viewport, asserting the balance after each purchase and failing on any page error.
 
-- Free: blurred photo → paywall → upgrade → generated → revealed, balance 98
+- Free: blurred video → paywall → upgrade → generated → revealed, balance 82
+- Free: asking for a photo gets a blurred one; after upgrading it unlocks, balance 96
 - Free: closing the paywall or cancelling checkout keeps the photo locked and charges nothing
 - Premium with 7 tokens: blurred video → three packs → buy 350 → revealed, balance 339
+- Premium with 7 tokens asking for a video: blurred → buy 350 → revealed, balance 327
 - Premium: topping up elsewhere, then Unlock reveals without the sheet
 - Premium with enough tokens: the video arrives unlocked and is charged, as today
 - Premium settings: photos only → blurred photo; nothing allowed → nothing sent
-- Current flow: free and Premium users get a deflection and no media
+- Current flow: free and low-balance Premium users get a deflection; with enough tokens a requested video works as today
 
 ## What's real and what's mocked
 
 | Real | Mocked |
 |---|---|
 | Media rules and reveal guard (`src/lib/media.ts`, unit-tested) | Payment provider (no charge; test card prefilled) |
-| Candy.ai's automatic-media prices, pack prices and Premium price | Chat, characters and media (static frames) |
+| Candy.ai's media prices (automatic and asked for), pack prices and Premium price | Chat, characters and media (static frames) |
 | The full flow, balance rules and event sequence | Media generation (a short delay) |
 
 Character images are AI-generated stand-ins, used only to make the prototype recognisable.

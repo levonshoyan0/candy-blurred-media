@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import type { Character } from '../characters';
 import type { MediaType } from '../lib/media';
+import type { ChipId } from '../lib/chips';
 import * as I from './Icons';
 
 export type MediaState = 'locked' | 'generating' | 'revealed';
@@ -15,14 +16,15 @@ interface Props {
   character: Character;
   showUpgradeBanner: boolean;
   messages: Message[];
-  suggestion: string | null; // the one message the reviewer can send
+  chips: { id: ChipId; text: string }[]; // what the reviewer can send
+  chipsDisabled: boolean;
   showTip: boolean;
-  onSend: () => void;
+  onSend: (chip: ChipId) => void;
   onUnlock: (id: number) => void;
   children?: ReactNode; // overlays
 }
 
-export function ChatScreen({ character, showUpgradeBanner, messages, suggestion, showTip, onSend, onUnlock, children }: Props) {
+export function ChatScreen({ character, showUpgradeBanner, messages, chips, chipsDisabled, showTip, onSend, onUnlock, children }: Props) {
   // Scroll only the message list, never the page (scrollIntoView moves the whole page on mobile).
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -87,11 +89,15 @@ export function ChatScreen({ character, showUpgradeBanner, messages, suggestion,
       </div>
 
       <div className="composer">
-        {suggestion && (
-          <button className="suggest" onClick={onSend}>
-            {suggestion}
-            {showTip && <span className="tip">Tap to send</span>}
-          </button>
+        {chips.length > 0 && (
+          <div className="chips">
+            {showTip && <span className="tip chips-tip">Tap a message to send it</span>}
+            {chips.map((c) => (
+              <button key={c.id} className="suggest" data-chip={c.id} disabled={chipsDisabled} onClick={() => onSend(c.id)}>
+                {c.text}
+              </button>
+            ))}
+          </div>
         )}
         <div className="box">
           <div className="box-row">
@@ -117,10 +123,11 @@ export function ChatScreen({ character, showUpgradeBanner, messages, suggestion,
 
 function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'media' }>; character: Character; onUnlock: () => void }) {
   const label = m.media === 'video' ? `15s video from ${character.name}` : `Photo from ${character.name}`;
+  const src = m.media === 'video' ? character.video : character.photo;
   if (m.state === 'revealed')
     return (
       <div className={`media ${m.media}`}>
-        <img src={m.media === 'video' ? character.video : character.photo} alt={label} />
+        <img src={src} alt={label} />
         {m.media === 'video' && (
           <>
             <span className="play">
@@ -132,10 +139,8 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
       </div>
     );
   return (
-    <div className="media-wrap">
     <div className={`media locked ${m.media} ${m.state}`}>
-      {/* Placeholder: a generic blur of the character's existing art, not a preview of the new media. */}
-      <img src={character.avatar} alt="" className="blurimg" />
+      <img src={src} alt="" className="blurimg" />
       <div className="lockbody">
         {m.state === 'generating' ? (
           <>
@@ -151,11 +156,10 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
             <button className="lk-btn" onClick={onUnlock}>
               Unlock
             </button>
+            <span className="tip inline">Tap Unlock to see it</span>
           </>
         )}
       </div>
-    </div>
-      {m.state === 'locked' && <span className="tip below">Tap Unlock to see it</span>}
     </div>
   );
 }

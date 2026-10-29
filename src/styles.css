@@ -265,3 +265,12 @@ button:disabled { cursor: default; }
 .pw-t1 { margin-top: 18px; }
 .pw-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
 .media-wrap:has(.tip) { margin-bottom: 46px; }
+.chips { position: relative; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.suggest:disabled { opacity: .45; box-shadow: none; }
+.chips-tip { left: auto; right: 0; translate: 0 0; animation: bobr 1.6s ease-in-out infinite; }
+.chips-tip::after { left: auto; right: 24px; translate: 0 0; }
+@keyframes bobr { 50% { translate: 0 -3px; } }
+.media { max-height: 64vh; max-height: 64dvh; }
+.tip.inline { position: relative; left: auto; bottom: auto; translate: 0 0; margin-top: 4px; animation: bobi 1.6s ease-in-out infinite; }
+.tip.inline::after { bottom: auto; top: -6px; border: 6px solid transparent; border-top: 0; border-bottom-color: #fff; }
+@keyframes bobi { 50% { transform: translateY(3px); } }

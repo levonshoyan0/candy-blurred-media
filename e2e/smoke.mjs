@@ -41,8 +41,9 @@ for (const vp of viewports) {
     await page.locator('.reset').click();
     await page.evaluate(() => window.scrollTo(0, 0));
   };
-  const sendAndWait = async (sel) => {
-    await page.locator('.suggest').click();
+  const chip = (id) => page.locator(`.suggest[data-chip="${id}"]`);
+  const sendAndWait = async (sel, id = 'tonight') => {
+    await chip(id).click();
     await page.locator(sel).waitFor({ timeout: 8000 });
   };
   const toggle = (name) => page.locator('.tgl', { hasText: name }).click();
@@ -52,14 +53,14 @@ for (const vp of viewports) {
 
   // ---------- Free user (no tokens) ----------
   await step('free: chat renders with the upgrade banner', () => page.locator('.upsell').waitFor({ timeout: 5000 }));
-  await step('free: character sends a blurred photo', () => sendAndWait('.media.locked.photo'));
+  await step('free: character sends a blurred video on her own', () => sendAndWait('.media.locked.video'));
   await step('free: Unlock → Premium paywall about photos & videos', async () => {
     await page.locator('.lk-btn').click();
     await page.locator('.paywall .pw-t2', { hasText: 'Photos, videos & voice notes from Megan' }).waitFor({ timeout: 3000 });
   });
   await step('free: closing the paywall keeps the photo locked', async () => {
     await page.locator('.pw-x').click();
-    if (!(await page.locator('.media.locked').count())) throw new Error('photo no longer locked');
+    if (!(await page.locator('.media.locked').count())) throw new Error('no longer locked');
   });
   await step('free: cancelling checkout charges nothing and keeps it locked', async () => {
     await page.locator('.lk-btn').click();
@@ -67,20 +68,30 @@ for (const vp of viewports) {
     await page.locator('.cancel').click();
     await page.locator('.media.locked').waitFor({ timeout: 3000 });
   });
-  await step('free: upgrade → photo generated after payment, balance 98 (100 − 2)', async () => {
+  await step('free: upgrade → video generated after payment, balance 82 (100 − 18)', async () => {
     await page.locator('.lk-btn').click();
     await page.locator('.pw-btn').click();
     await page.locator('.item', { hasText: 'Premium' }).waitFor({ timeout: 3000 });
     await page.locator('.pay').click();
     await page.locator('.media.generating').waitFor({ timeout: 3000 });
-    await page.locator('.media.photo:not(.locked)').waitFor({ timeout: 5000 });
-    await expectBalance(98);
+    await page.locator('.media.video:not(.locked) .play').waitFor({ timeout: 5000 });
+    await expectBalance(82);
     if (await page.locator('.upsell').count()) throw new Error('upgrade banner still shown');
+  });
+
+  await step('free: asking for a photo also gets a blurred one; after upgrading it unlocks (100 − 4 = 96)', async () => {
+    await reset();
+    await sendAndWait('.media.locked.photo', 'photo');
+    await page.locator('.lk-btn').click();
+    await page.locator('.pw-btn').click();
+    await page.locator('.pay').click();
+    await page.locator('.media.photo:not(.locked)').waitFor({ timeout: 5000 });
+    await expectBalance(96);
   });
 
   await choose('Current');
   await step('free, current flow: asking for a photo gets a deflection, no media', async () => {
-    await page.locator('.suggest').click();
+    await chip('photo').click();
     await page.locator('.b.h', { hasText: 'my camera is acting up' }).waitFor({ timeout: 8000 });
     await page.waitForTimeout(800);
     if (await page.locator('.media').count()) throw new Error('media sent');
@@ -132,18 +143,37 @@ for (const vp of viewports) {
   await step('premium: nothing allowed → nothing sent', async () => {
     await toggle('Photos');
     await reset();
-    await page.locator('.suggest').click();
-    await page.locator('.b.h', { hasText: 'nothing much' }).waitFor({ timeout: 8000 });
+    await chip('tonight').click();
+    await page.locator('.b.h', { hasText: 'what about you?' }).waitFor({ timeout: 8000 });
     await page.waitForTimeout(600);
     if (await page.locator('.media').count()) throw new Error('media sent');
     await toggle('Photos');
     await toggle('Videos');
   });
 
+  await step('premium: asking for a video with 7 tokens → blurred; buy 350 → 327 (7 + 350 − 30)', async () => {
+    await setBalance(7);
+    await reset();
+    await sendAndWait('.media.locked.video', 'video');
+    await page.locator('.lk-btn').click();
+    await page.locator('.buy-now').click();
+    await page.locator('.pay').click();
+    await page.locator('.media.video:not(.locked) .play').waitFor({ timeout: 5000 });
+    await expectBalance(327);
+  });
+
+  await step('premium, current flow: asking with enough tokens works as today (50 − 30 = 20)', async () => {
+    await setBalance(50);
+    await choose('Current');
+    await sendAndWait('.media.video:not(.locked) .play', 'video');
+    await expectBalance(20);
+    await choose('Suggested');
+  });
+
   await step('premium, current flow: 7 tokens → deflection, no media', async () => {
     await setBalance(7);
     await choose('Current');
-    await page.locator('.suggest').click();
+    await chip('video').click();
     await page.locator('.b.h', { hasText: 'not an option here' }).waitFor({ timeout: 8000 });
     await page.waitForTimeout(600);
     if (await page.locator('.media').count()) throw new Error('media sent');

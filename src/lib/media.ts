@@ -1,5 +1,6 @@
-/** Candy.ai's automatic-media prices (chat → "What can she send you?"). */
-export const PRICES = { photo: 2, video: 18 } as const; // video = 15s automatic
+/** Candy.ai's media prices: automatic (she sends on her own) vs asked for in chat. 15s videos. */
+export const PRICES = { photo: 2, video: 18 } as const;
+export const ASKED_PRICES = { photo: 4, video: 30 } as const;
 export type MediaType = keyof typeof PRICES;
 
 export type UserType = 'free' | 'premium';
@@ -18,20 +19,27 @@ export interface MediaDecision {
 }
 
 /**
- * Decides the next automatic media item.
+ * Decides what the character sends.
  *
- * - Free users have no automatic media today; they get one blurred photo (at most once a session).
- * - Premium users get what their settings allow, videos first (more value per unlock).
- *   If the balance covers it, it arrives unlocked and is charged, as today.
- *   If not, it arrives blurred instead of not at all.
- * - Nothing allowed → nothing is sent.
+ * - `request` = the user asked for a photo or video: it's always sent, at the asked-for price.
+ * - No request = automatic media:
+ *   - free users have none today; they get one blurred video (more value per unlock than a photo).
+ *   - Premium users get what their settings allow, videos first. Nothing allowed → nothing sent.
+ * - Free users always get it blurred. Premium users get it blurred only when the balance can't cover it;
+ *   otherwise it arrives unlocked and is charged, as today.
  */
-export function decideMedia(user: UserType, settings: MediaSettings, balance: number): MediaDecision | null {
-  if (user === 'free') return { type: 'photo', cost: PRICES.photo, locked: true };
-  const type: MediaType | null = settings.videos ? 'video' : settings.photos ? 'photo' : null;
-  if (!type) return null;
-  const cost = PRICES[type];
-  return { type, cost, locked: balance < cost };
+export function decideMedia(user: UserType, settings: MediaSettings, balance: number, request?: MediaType): MediaDecision | null {
+  let type: MediaType | null;
+  let cost: number;
+  if (request) {
+    type = request;
+    cost = ASKED_PRICES[request];
+  } else {
+    type = user === 'free' ? 'video' : settings.videos ? 'video' : settings.photos ? 'photo' : null;
+    if (!type) return null;
+    cost = PRICES[type];
+  }
+  return { type, cost, locked: user === 'free' || balance < cost };
 }
 
 /** Media is only generated and revealed when the balance covers its price. */

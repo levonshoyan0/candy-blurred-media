@@ -5,6 +5,7 @@ import { CheckoutScreen } from './components/CheckoutScreen';
 import { Controls, type Flow } from './components/Controls';
 import { PacksSheet } from './components/PacksSheet';
 import { PaywallModal } from './components/PaywallModal';
+import { CHIPS, type ChipId } from './lib/chips';
 import { track } from './lib/events';
 import { canReveal, decideMedia, formatTokens, PREMIUM, type MediaSettings, type Pack, type UserType } from './lib/media';
 
@@ -26,19 +27,20 @@ const HISTORY: Record<UserType, Message[]> = {
   ],
 };
 
-/** The one message the reviewer sends, and the character's reply, per user and flow. */
-const SCRIPT: Record<UserType, Record<Flow, { ask: string; reply: string[] }>> = {
-  free: {
-    new: { ask: 'what are you up to tonight?', reply: ['lying in bed, kinda bored…', 'took something just for you 😏'] },
-    legacy: { ask: 'Hiii, can you send me a photo?', reply: ['ugh i wish i could!', 'my camera is acting up though', 'so tell me about yourself instead?'] },
-  },
-  premium: {
-    new: { ask: 'what are you up to tonight?', reply: ['just got out of the shower…', 'made something just for you 😏'] },
-    legacy: { ask: 'send me a video', reply: ['i literally cannot', 'it’s just not an option here'] },
-  },
-};
-const NOTHING_ALLOWED = ['mmm, nothing much… tell me about your day?'];
+const TONIGHT: Record<UserType, string> = { free: 'lying in bed, kinda bored…', premium: 'just got out of the shower…' };
 
+/** The character's text reply before (or instead of) media. Current-flow deflections are Candy.ai's real replies. */
+function replyFor(chip: ChipId, user: UserType, flow: Flow, sending: 'locked' | 'unlocked' | null): string[] {
+  if (sending === 'unlocked') return chip === 'tonight' ? [TONIGHT[user], 'made something just for you 😏'] : ['here you go 😘'];
+  if (sending === 'locked') return chip === 'tonight' ? [TONIGHT[user], 'made something just for you 😏'] : ['mmm okay…', 'here, just for you 😏'];
+  if (chip === 'tonight') return [TONIGHT[user], 'what about you?'];
+  if (flow === 'new') return NOTHING_ALLOWED; // unreachable today: requests are always answered in the new flow
+  if (user === 'free')
+    return chip === 'photo'
+      ? ['ugh i wish i could!', 'my camera is acting up though', 'so tell me about yourself instead?']
+      : ['i told you, i can’t send videos', 'just doesn’t work on this app'];
+  return ['i literally cannot', 'it’s just not an option here'];
+}
 const now = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' ', '');
 
 export default function App() {
@@ -50,7 +52,8 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false); // runtime: a free user can upgrade during the demo
   const [balance, setBalance] = useState(0);
   const [messages, setMessages] = useState<Message[]>(HISTORY.free);
-  const [sent, setSent] = useState(false);
+  const [used, setUsed] = useState<ChipId[]>([]);
+  const [busy, setBusy] = useState(false);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [checkout, setCheckout] = useState<Checkout>(null);
 
@@ -70,7 +73,8 @@ export default function App() {
       setIsPremium(u === 'premium');
       setBalance(u === 'premium' ? (next.balance ?? manualBalance) : 0);
       setMessages(HISTORY[u]);
-      setSent(false);
+      setUsed([]);
+      setBusy(false);
       setOverlay(null);
       setCheckout(null);
     },
@@ -79,37 +83,37 @@ export default function App() {
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const character = CHARACTERS[user];
-  const script = SCRIPT[user][flow];
 
   const patchMedia = (mid: number, patch: Partial<Extract<Message, { kind: 'media' }>>) =>
     setMessages((ms) => ms.map((m) => (m.id === mid && m.kind === 'media' ? { ...m, ...patch } : m)));
 
-  const send = () => {
-    if (sent) return;
-    setSent(true);
-    setMessages((ms) => [...ms, { id: id(), kind: 'text', from: 'me', text: script.ask, time: now() }]);
+  const send = (chip: ChipId) => {
+    if (busy || used.includes(chip)) return;
+    setUsed((u) => [...u, chip]);
+    setBusy(true);
+    const text = CHIPS.find((c) => c.id === chip)!.text;
+    setMessages((ms) => [...ms, { id: id(), kind: 'text', from: 'me', text, time: now() }]);
     const typing = id();
     later(() => setMessages((ms) => [...ms, { id: typing, kind: 'typing' }]), 400);
 
-    // What the character sends after the text replies.
-    const decision = flow === 'new' || user === 'premium' ? decideMedia(isPremium ? 'premium' : 'free', settings, balanceRef.current) : null;
-    let reply = script.reply;
-    let media = decision;
-    if (flow === 'legacy') {
-      // Today: free users get nothing; Premium users get the video only if the balance covers it.
-      media = decision && !decision.locked && user === 'premium' ? decision : null;
-      if (media) reply = ['here you go 😘'];
-      else track('legacy_deflection', { user });
-    } else if (!decision) reply = NOTHING_ALLOWED;
+    // What the character sends. Today (current flow) nothing is ever sent blurred:
+    // free users get a deflection, Premium users get media only if the balance covers it.
+    const who: UserType = isPremium ? 'premium' : 'free';
+    const request = chip === 'tonight' ? undefined : chip;
+    let media = decideMedia(who, settings, balanceRef.current, request);
+    if (flow === 'legacy' && media?.locked) media = null;
+    if (!media && flow === 'legacy' && request) track('legacy_deflection', { user: who, chip });
 
-    reply.forEach((text, i) =>
+    const reply = replyFor(chip, who, flow, media ? (media.locked ? 'locked' : 'unlocked') : null);
+    reply.forEach((t, i) =>
       later(() => {
         setMessages((ms) => {
           const rest = ms.filter((m) => m.id !== typing);
-          const out: Message[] = [...rest, { id: id(), kind: 'text', from: 'her', text, time: now() }];
+          const out: Message[] = [...rest, { id: id(), kind: 'text', from: 'her', text: t, time: now() }];
           if (i < reply.length - 1 || media) out.push({ id: typing, kind: 'typing' });
           return out;
         });
+        if (i === reply.length - 1 && !media) setBusy(false);
       }, 1300 + i * 900),
     );
 
@@ -121,8 +125,14 @@ export default function App() {
           ...ms.filter((x) => x.id !== typing),
           { id: mid, kind: 'media', media: m.type, cost: m.cost, state: m.locked ? 'locked' : 'generating' },
         ]);
-        if (m.locked) track('locked_media_shown', { user: isPremium ? 'premium' : 'free', media: m.type, cost: m.cost, balance: balanceRef.current });
-        else later(() => reveal(mid, m.cost, true), GEN_MS);
+        if (m.locked) {
+          track('locked_media_shown', { user: who, media: m.type, cost: m.cost, requested: !!request, balance: balanceRef.current });
+          setBusy(false);
+        } else
+          later(() => {
+            reveal(mid, m.cost, true);
+            setBusy(false);
+          }, GEN_MS);
       }, 1300 + reply.length * 900);
     }
   };
@@ -220,8 +230,9 @@ export default function App() {
               character={character}
               showUpgradeBanner={!isPremium}
               messages={messages}
-              suggestion={sent ? null : script.ask}
-              showTip={!sent}
+              chips={CHIPS.filter((c) => !used.includes(c.id))}
+              chipsDisabled={busy}
+              showTip={used.length === 0}
               onSend={send}
               onUnlock={unlock}
             >
