@@ -24,7 +24,7 @@ Pick the user in the sidebar; both chat with Megan, and the rest of the flow fol
 | **Free** (no tokens) | A blurred video on her own (once a session), or the photo/video they ask for | The Premium paywall: "Upgrade to Unlock · Photos, videos & voice notes from Megan" | Premium's 100 tokens pay for it (82 left after the 18-token video) |
 | **Premium** (low balance) | Automatic media, or the photo/video they ask for, blurred when the balance can't cover it | The "Not Enough Tokens!" pack picker | The pack's tokens pay for the media |
 
-In both cases **the photo or video is generated only after payment**. Until then the chat shows it blurred. Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
+In both cases **only a cheap preview frame is generated before payment**; that frame is what the chat shows blurred, and the full photo or video is generated from it after payment (the prototype simulates this with a short delay). Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
 
 **Free user**
 
