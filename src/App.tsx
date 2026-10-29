@@ -30,11 +30,10 @@ const HISTORY: Record<UserType, Message[]> = {
 const TONIGHT: Record<UserType, string> = { free: 'lying in bed, kinda bored…', premium: 'just got out of the shower…' };
 
 /** The character's text reply before (or instead of) media. Current-flow deflections are Candy.ai's real replies. */
-function replyFor(chip: ChipId, user: UserType, flow: Flow, sending: 'locked' | 'unlocked' | null): string[] {
+function replyFor(chip: ChipId, user: UserType, sending: 'locked' | 'unlocked' | null): string[] {
   if (sending === 'unlocked') return chip === 'tonight' ? [TONIGHT[user], 'made something just for you 😏'] : ['here you go 😘'];
   if (sending === 'locked') return chip === 'tonight' ? [TONIGHT[user], 'made something just for you 😏'] : ['mmm okay…', 'here, just for you 😏'];
   if (chip === 'tonight') return [TONIGHT[user], 'what about you?'];
-  if (flow === 'new') return NOTHING_ALLOWED; // unreachable today: requests are always answered in the new flow
   if (user === 'free')
     return chip === 'photo'
       ? ['ugh i wish i could!', 'my camera is acting up though', 'so tell me about yourself instead?']
@@ -104,7 +103,7 @@ export default function App() {
     if (flow === 'legacy' && media?.locked) media = null;
     if (!media && flow === 'legacy' && request) track('legacy_deflection', { user: who, chip });
 
-    const reply = replyFor(chip, who, flow, media ? (media.locked ? 'locked' : 'unlocked') : null);
+    const reply = replyFor(chip, who, media ? (media.locked ? 'locked' : 'unlocked') : null);
     reply.forEach((t, i) =>
       later(() => {
         setMessages((ms) => {
