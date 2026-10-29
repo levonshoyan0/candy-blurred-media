@@ -89,7 +89,7 @@ Both suites run in GitHub Actions on every push.
 |---|---|
 | Media rules and reveal guard (`src/lib/media.ts`, unit-tested) | Payment provider (no charge; test card prefilled) |
 | Candy.ai's media prices (automatic and asked for), pack prices and Premium price | Chat, characters and media (static frames) |
-| The full flow, balance rules and event sequence | Media generation (a short delay) |
+| The full flow, balance rules and event sequence | Media generation (preview frame, then a short delay for the full media) |
 
 Character images are AI-generated stand-ins, used only to make the prototype recognisable.
 
