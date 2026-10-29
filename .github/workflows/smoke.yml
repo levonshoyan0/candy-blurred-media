@@ -1,0 +1,23 @@
+name: E2E smoke test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run build
+      - run: npx playwright@1.48.2 install --with-deps chromium
+      - name: Run smoke test
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          npx wait-on@8.0.1 http://localhost:4173/
+          node e2e/smoke.mjs
