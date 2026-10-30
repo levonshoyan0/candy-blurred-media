@@ -81,7 +81,10 @@ Both suites run in GitHub Actions on every push.
 - Premium: topping up elsewhere, then Unlock reveals without the sheet
 - Premium with enough tokens: the video arrives unlocked and is charged, as today
 - Premium settings: photos only → blurred photo; nothing allowed → nothing sent
+- Premium: cancelling checkout keeps it locked and charges nothing; "Show more packages" lists all six and buying 1,150 works
+- Premium with enough tokens: a requested photo arrives unlocked at the asked-for price (4 tk)
 - Current flow: free and low-balance Premium users get a deflection; with enough tokens a requested video works as today
+- Each message chip can be sent once
 
 ## What's real and what's mocked
 

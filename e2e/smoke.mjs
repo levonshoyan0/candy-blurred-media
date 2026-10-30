@@ -28,9 +28,15 @@ for (const vp of viewports) {
     }
   };
   const balance = async () => (await page.locator('.balance-val').inputValue()).trim();
+  // Polls briefly so a re-render after a purchase or reset can land before we compare.
   const expectBalance = async (want) => {
-    const got = await balance();
-    if (got !== String(want)) throw new Error(`balance ${got}, expected ${want}`);
+    let got = '';
+    for (let i = 0; i < 20; i++) {
+      got = await balance();
+      if (got === String(want)) return;
+      await page.waitForTimeout(100);
+    }
+    throw new Error(`balance ${got}, expected ${want}`);
   };
   const setBalance = (n) => page.locator('.balance-val').fill(String(n));
   const choose = async (text) => {
@@ -96,6 +102,16 @@ for (const vp of viewports) {
     await page.waitForTimeout(800);
     if (await page.locator('.media').count()) throw new Error('media sent');
   });
+  await step('free, current flow: asking for a video gets a deflection too', async () => {
+    await chip('video').click();
+    await page.locator('.b.h', { hasText: 'can’t send videos' }).waitFor({ timeout: 8000 });
+    await page.waitForTimeout(800);
+    if (await page.locator('.media').count()) throw new Error('media sent');
+  });
+  await step('a message chip can only be sent once', async () => {
+    if (await chip('photo').count()) throw new Error('photo chip still shown');
+    if (!(await chip('tonight').count())) throw new Error('tonight chip missing');
+  });
 
   // ---------- Premium user (low balance) ----------
   await choose('Suggested');
@@ -160,6 +176,38 @@ for (const vp of viewports) {
     await page.locator('.pay').click();
     await page.locator('.media.video:not(.locked) .play').waitFor({ timeout: 5000 });
     await expectBalance(327);
+  });
+
+  await step('premium: cancelling checkout keeps it locked and charges nothing', async () => {
+    await setBalance(7);
+    await reset();
+    await sendAndWait('.media.locked.video');
+    await page.locator('.lk-btn').click();
+    await page.locator('.buy-now').click();
+    await page.locator('.cancel').click();
+    await page.locator('.media.locked').waitFor({ timeout: 3000 });
+    await expectBalance(7);
+  });
+
+  await step('premium: "Show more packages" lists all six; buying 1,150 → 1,139 (7 + 1150 − 18)', async () => {
+    await page.locator('.lk-btn').click();
+    await page.locator('.more').click();
+    const rows = await page.locator('.nrow').count();
+    if (rows !== 6) throw new Error(`${rows} packs shown`);
+    await page.locator('.nrow', { hasText: '1,150' }).click();
+    await page.locator('.buy-now').click();
+    await page.locator('.item', { hasText: '1,150 tokens' }).waitFor({ timeout: 3000 });
+    await page.locator('.pay').click();
+    await page.locator('.media.video:not(.locked) .play').waitFor({ timeout: 5000 });
+    await expectBalance(1139);
+  });
+
+  await step('premium: asking for a photo with enough tokens arrives unlocked at the asked-for price (50 − 4 = 46)', async () => {
+    await setBalance(50);
+    await reset();
+    await sendAndWait('.media.photo:not(.locked)', 'photo');
+    await page.waitForTimeout(1600);
+    await expectBalance(46);
   });
 
   await step('premium, current flow: asking with enough tokens works as today (50 − 30 = 20)', async () => {
