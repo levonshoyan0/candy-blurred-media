@@ -7,7 +7,7 @@ A working prototype of the smallest testable slice of **initiative #1** from my 
 
 **▶ Live demo:** https://levonshoyan0.github.io/candy-blurred-media/
 
-<p align="center"><img src="docs/chat-flow.gif" width="300" alt="Free user: Megan sends a blurred video, Unlock opens the Premium paywall, the video is generated and revealed after upgrading"></p>
+<p align="center"><img src="docs/chat-flow.gif" width="300" alt="Free user: Megan sends a blurred video, Unlock opens the Premium paywall, the video is made and revealed after upgrading"></p>
 
 ## The problem
 
@@ -24,11 +24,11 @@ Pick the user in the sidebar; both chat with Megan, and the rest of the flow fol
 | **Free** (no tokens) | A blurred video on her own (once a session), or the photo/video they ask for | The Premium paywall: "Upgrade to Unlock · Photos, videos & voice notes from Megan" | Premium's 100 tokens pay for it (82 left after the 18-token video) |
 | **Premium** (low balance) | Automatic media, or the photo/video they ask for, blurred when the balance can't cover it | The "Not Enough Tokens!" pack picker | The pack's tokens pay for the media |
 
-In both cases **only a cheap preview frame is generated before payment**; that frame is what the chat shows blurred, and the full photo or video is generated from it after payment (the prototype simulates this with a short delay). Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
+In both cases **nothing new is generated before payment**: the blur is one of the character's existing photos. A photo simply unblurs; a video is made from that photo with Candy's photo-to-video after payment (the prototype simulates this with a short delay). Locked items stay in the chat; closing the paywall or cancelling checkout leaves them locked.
 
 **Free user**
 
-![Free user: blurred video → Premium paywall → generated after payment → revealed](docs/free-flow.png)
+![Free user: blurred video → Premium paywall → video made after payment → revealed](docs/free-flow.png)
 
 **Premium user with 7 tokens**
 
@@ -61,7 +61,7 @@ Other events: `paywall_dismissed`, `packs_dismissed`, `pack_selected`, `checkout
 ## Built-in guardrails
 
 - Automatic media follows the user's settings; free users get at most one automatic blurred video per session. Requested media is always answered.
-- Media is generated and revealed in exactly one place, and only when the balance covers its price.
+- Media is revealed (and a video made) in exactly one place, and only when the balance covers its price.
 - If the user tops up elsewhere, "Unlock" reveals the item directly instead of selling again.
 - No timers, countdowns or follow-up messages; closing the paywall or sheet is one tap.
 
@@ -73,7 +73,7 @@ Both suites run in GitHub Actions on every push.
 
 **End-to-end** (`e2e/smoke.mjs`, Playwright): runs every flow against the production build on a desktop and a phone viewport, asserting the balance after each purchase and failing on any page error.
 
-- Free: blurred video → paywall → upgrade → generated → revealed, balance 82
+- Free: blurred video → paywall → upgrade → video made → revealed, balance 82
 - Free: asking for a photo gets a blurred one; after upgrading it unlocks, balance 96
 - Free: closing the paywall or cancelling checkout keeps the photo locked and charges nothing
 - Premium with 7 tokens: blurred video → three packs → buy 350 → revealed, balance 339
@@ -92,7 +92,7 @@ Both suites run in GitHub Actions on every push.
 |---|---|
 | Media rules and reveal guard (`src/lib/media.ts`, unit-tested) | Payment provider (no charge; test card prefilled) |
 | Candy.ai's media prices (automatic and asked for), pack prices and Premium price | Chat, characters and media (static frames) |
-| The full flow, balance rules and event sequence | Media generation (preview frame, then a short delay for the full media) |
+| The full flow, balance rules and event sequence | Photo-to-video generation (a short delay) |
 
 Character images are AI-generated stand-ins, used only to make the prototype recognisable.
 

@@ -145,7 +145,7 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
         {m.state === 'generating' ? (
           <>
             <span className="spinner" />
-            <span className="lk-label">{m.media === 'video' ? `${character.name} is recording…` : `${character.name} is taking a photo…`}</span>
+            <span className="lk-label">{`${character.name} is recording…`}</span>
           </>
         ) : (
           <>

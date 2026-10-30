@@ -42,7 +42,7 @@ export function decideMedia(user: UserType, settings: MediaSettings, balance: nu
   return { type, cost, locked: user === 'free' || balance < cost };
 }
 
-/** Media is only generated and revealed when the balance covers its price. */
+/** Media is only revealed (and a video only made) when the balance covers its price. */
 export const canReveal = (balance: number, cost: number) => balance >= cost;
 
 export interface Pack {

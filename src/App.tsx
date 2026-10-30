@@ -10,7 +10,7 @@ import { track } from './lib/events';
 import { canReveal, decideMedia, formatTokens, PREMIUM, type MediaSettings, type Pack, type UserType } from './lib/media';
 
 const START_BALANCE = 7; // as in the reference screenshots
-const GEN_MS = 1400; // media is generated only after payment
+const GEN_MS = 1400; // a video is made from the character's existing photo only after payment
 
 type Overlay = null | { kind: 'paywall'; id: number } | { kind: 'packs'; id: number };
 type Checkout = null | { kind: 'premium'; id: number } | { kind: 'pack'; id: number; pack: Pack };
@@ -124,7 +124,11 @@ export default function App() {
           ...ms.filter((x) => x.id !== typing),
           { id: mid, kind: 'media', media: m.type, cost: m.cost, state: m.locked ? 'locked' : 'generating' },
         ]);
-        if (m.locked) {
+        if (!m.locked && m.type === 'photo') {
+          // An existing photo: nothing to generate, it's simply sent and charged.
+          reveal(mid, m.cost, true);
+          setBusy(false);
+        } else if (m.locked) {
           track('locked_media_shown', { user: who, media: m.type, cost: m.cost, requested: !!request, balance: balanceRef.current });
           setBusy(false);
         } else
@@ -146,9 +150,14 @@ export default function App() {
     return true;
   };
 
+  /** Photos are existing character photos and unblur at once; videos are made from that photo (photo-to-video) after payment. */
   const generateThenReveal = (mid: number) => {
     const m = messages.find((x) => x.id === mid);
     const cost = m && m.kind === 'media' ? m.cost : 0;
+    if (m && m.kind === 'media' && m.media === 'photo') {
+      if (!reveal(mid, cost)) patchMedia(mid, { state: 'locked' });
+      return;
+    }
     patchMedia(mid, { state: 'generating' });
     track('media_generated', { cost });
     later(() => {
