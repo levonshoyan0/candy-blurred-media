@@ -274,3 +274,5 @@ button:disabled { cursor: default; }
 .tip.inline { position: relative; left: auto; bottom: auto; translate: 0 0; margin-top: 4px; animation: bobi 1.6s ease-in-out infinite; }
 .tip.inline::after { bottom: auto; top: -6px; border: 6px solid transparent; border-top: 0; border-bottom-color: #fff; }
 @keyframes bobi { 50% { transform: translateY(3px); } }
+.media.locked.placeholder { background: radial-gradient(120% 80% at 50% 20%, #3a2230, #1c1418 70%); }
+.lk-sub { font-size: 12px; color: #d8cdd2; margin-top: -4px; }

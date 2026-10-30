@@ -122,9 +122,9 @@ export default function App() {
       later(() => {
         setMessages((ms) => [
           ...ms.filter((x) => x.id !== typing),
-          { id: mid, kind: 'media', media: m.type, cost: m.cost, state: m.locked ? 'locked' : 'generating' },
+          { id: mid, kind: 'media', media: m.type, cost: m.cost, requested: !!request, state: m.locked ? 'locked' : 'generating' },
         ]);
-        if (!m.locked && m.type === 'photo') {
+        if (!m.locked && m.type === 'photo' && !request) {
           // An existing photo: nothing to generate, it's simply sent and charged.
           reveal(mid, m.cost, true);
           setBusy(false);
@@ -150,11 +150,14 @@ export default function App() {
     return true;
   };
 
-  /** Photos are existing character photos and unblur at once; videos are made from that photo (photo-to-video) after payment. */
+  /**
+   * Unprompted photos are existing character photos and unblur at once; unprompted videos are made from that photo.
+   * Requested media is generated only after payment (shown as a placeholder until then).
+   */
   const generateThenReveal = (mid: number) => {
     const m = messages.find((x) => x.id === mid);
     const cost = m && m.kind === 'media' ? m.cost : 0;
-    if (m && m.kind === 'media' && m.media === 'photo') {
+    if (m && m.kind === 'media' && m.media === 'photo' && !m.requested) {
       if (!reveal(mid, cost)) patchMedia(mid, { state: 'locked' });
       return;
     }

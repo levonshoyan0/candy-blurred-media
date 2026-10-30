@@ -10,7 +10,7 @@ export type MediaState = 'locked' | 'generating' | 'revealed';
 export type Message =
   | { id: number; kind: 'text'; from: 'me' | 'her'; text: string; time?: string }
   | { id: number; kind: 'typing' }
-  | { id: number; kind: 'media'; media: MediaType; cost: number; state: MediaState };
+  | { id: number; kind: 'media'; media: MediaType; cost: number; requested: boolean; state: MediaState };
 
 interface Props {
   character: Character;
@@ -139,13 +139,14 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
       </div>
     );
   return (
-    <div className={`media locked ${m.media} ${m.state}`}>
-      <img src={src} alt="" className="blurimg" />
+    <div className={`media locked ${m.media} ${m.state} ${m.requested ? 'placeholder' : ''}`}>
+      {/* Unprompted: a blurred existing photo. Requested: a generic placeholder, never a fake preview. */}
+      {!m.requested && <img src={src} alt="" className="blurimg" />}
       <div className="lockbody">
         {m.state === 'generating' ? (
           <>
             <span className="spinner" />
-            <span className="lk-label">{`${character.name} is recording…`}</span>
+            <span className="lk-label">{m.media === 'video' ? `${character.name} is recording…` : `${character.name} is taking your photo…`}</span>
           </>
         ) : (
           <>
@@ -153,6 +154,7 @@ function MediaItem({ m, character, onUnlock }: { m: Extract<Message, { kind: 'me
               <I.Lock size={18} />
             </span>
             <span className="lk-label">{label}</span>
+            {m.requested && <span className="lk-sub">Made for you after you unlock</span>}
             <button className="lk-btn" onClick={onUnlock}>
               Unlock
             </button>

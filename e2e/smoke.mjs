@@ -87,7 +87,7 @@ for (const vp of viewports) {
 
   await step('free: asking for a photo also gets a blurred one; after upgrading it unlocks (100 − 4 = 96)', async () => {
     await reset();
-    await sendAndWait('.media.locked.photo', 'photo');
+    await sendAndWait('.media.locked.photo.placeholder', 'photo'); // requested → placeholder, not a fake preview
     await page.locator('.lk-btn').click();
     await page.locator('.pw-btn').click();
     await page.locator('.pay').click();
@@ -170,7 +170,7 @@ for (const vp of viewports) {
   await step('premium: asking for a video with 7 tokens → blurred; buy 350 → 327 (7 + 350 − 30)', async () => {
     await setBalance(7);
     await reset();
-    await sendAndWait('.media.locked.video', 'video');
+    await sendAndWait('.media.locked.video.placeholder', 'video');
     await page.locator('.lk-btn').click();
     await page.locator('.buy-now').click();
     await page.locator('.pay').click();
