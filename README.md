@@ -130,7 +130,7 @@ e2e/smoke.mjs              end-to-end tests
 
 ## How I used AI
 
-- **Research:** Claude (Research mode) and Gemini Deep Research as two independent passes on benchmarks and competitors. Where they disagreed, I checked the primary source. I used only peer-reviewed or primary sources, and an illustrative baseline instead of unreliable public revenue claims.
+- **Research:** Claude (Research mode) and Gemini Deep Research as two independent passes on benchmarks and competitors. Where they disagreed, I checked the primary source. I sized everything from a baseline built on EverAI's own handbook numbers instead of unreliable public revenue claims.
 - **Teardown:** I used Candy.ai with a Premium account and test tokens, and had Claude turn ~100 screenshots into an evidence log of every price and purchase flow. I corrected its misreads before anything reached the doc.
 - **Strategy:** I set the strategy: the initiatives, their order and the prioritization method. Claude was a brainstorming partner and helped build the sizing models, which I challenged and rebuilt on conservative assumptions.
 - **Prototype:** Claude wrote the React code, tests and CI. I acted as PM and QA and matched the UI to the real Candy.ai on my phone.
